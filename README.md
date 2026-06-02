@@ -45,16 +45,23 @@ Copy `.env.local.example` to `.env.local` and fill in:
 | `ANTHROPIC_API_KEY` | Anthropic API key for recommendations |
 | `STREAMPASS_ADMIN_KEY` | Admin key for passport updates |
 
-### 3. Database setup
+### 3. Supabase (Northside Intelligence Brain)
 
-Run the migration in Supabase SQL Editor or via CLI:
+Stream Pass is deployed on the **Northside Intelligence Brain** Supabase project (shared with other NI apps).
+
+| | |
+|---|---|
+| **Project** | Northside Intelligence Brain |
+| **Project ID** | `kxijunwgbrlfzvgkhklo` |
+| **Dashboard** | [supabase.com/dashboard/project/kxijunwgbrlfzvgkhklo](https://supabase.com/dashboard/project/kxijunwgbrlfzvgkhklo) |
+
+Schema is already applied (`streampass_*` tables + RLS + Realtime). To link the CLI:
 
 ```bash
-# Using Supabase CLI
-supabase db push
+supabase link --project-ref kxijunwgbrlfzvgkhklo
 ```
 
-Or apply `supabase/migrations/001_initial_schema.sql` directly in the [Supabase Dashboard](https://supabase.com/dashboard/project/kxijunwgbrlfzvgkhklo/sql).
+See `supabase/README.md` for table reference and auth redirect URLs.
 
 ### 4. Run locally
 
@@ -109,7 +116,8 @@ Set all environment variables in Vercel project settings. Point `streampass.then
 
 ## Supabase Project
 
-- Project ID: `kxijunwgbrlfzvgkhklo`
+- **Northside Intelligence Brain** — `kxijunwgbrlfzvgkhklo` (us-east-1)
+- GitHub: [northsideventuresllc-sketch/streampass](https://github.com/northsideventuresllc-sketch/streampass)
 - All tables prefixed with `streampass_`
 - Row Level Security enabled on all tables
 
