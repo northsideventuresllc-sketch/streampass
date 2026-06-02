@@ -18,14 +18,12 @@ type EnrichedMessage = RoomMessage & {
 interface RoomViewProps {
   room: WatchRoom;
   userId: string;
-  username: string;
   initialMessages: EnrichedMessage[];
 }
 
 export function RoomView({
   room,
   userId,
-  username,
   initialMessages,
 }: RoomViewProps) {
   const [messages, setMessages] = useState(initialMessages);

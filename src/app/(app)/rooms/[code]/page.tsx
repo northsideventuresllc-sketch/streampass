@@ -21,12 +21,6 @@ export default async function RoomPage({ params }: RoomPageProps) {
 
   if (!room) notFound();
 
-  const { data: profile } = await supabase
-    .from("streampass_profiles")
-    .select("username")
-    .eq("id", user!.id)
-    .single();
-
   const { data: messages } = await supabase
     .from("streampass_room_messages")
     .select("*")
@@ -54,7 +48,6 @@ export default async function RoomPage({ params }: RoomPageProps) {
     <RoomView
       room={room}
       userId={user!.id}
-      username={profile?.username ?? "User"}
       initialMessages={enrichedMessages}
     />
   );
