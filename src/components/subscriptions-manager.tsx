@@ -1,0 +1,192 @@
+"use client";
+
+import { useState } from "react";
+import { Plus, Trash2, AlertTriangle } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
+import { STREAMING_SERVICES, IDLE_DAYS_THRESHOLD } from "@/lib/constants";
+import type { UserService } from "@/lib/types";
+import { formatCurrency, daysSince, formatRelativeDate } from "@/lib/utils";
+
+interface SubscriptionsManagerProps {
+  initialServices: UserService[];
+}
+
+export function SubscriptionsManager({
+  initialServices,
+}: SubscriptionsManagerProps) {
+  const [services, setServices] = useState(initialServices);
+  const [serviceName, setServiceName] = useState<string>(STREAMING_SERVICES[0]);
+  const [monthlyCost, setMonthlyCost] = useState("");
+  const [loading, setLoading] = useState(false);
+  const supabase = createClient();
+
+  const totalSpend = services.reduce(
+    (sum, s) => sum + Number(s.monthly_cost),
+    0
+  );
+
+  const idleServices = services.filter((s) => {
+    const days = daysSince(s.last_active_at);
+    return days === null || days >= IDLE_DAYS_THRESHOLD;
+  });
+
+  const savingsOpportunity = idleServices.reduce(
+    (sum, s) => sum + Number(s.monthly_cost),
+    0
+  );
+
+  async function handleAdd(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from("streampass_user_services")
+      .upsert(
+        {
+          user_id: user.id,
+          service_name: serviceName,
+          monthly_cost: parseFloat(monthlyCost) || 0,
+        },
+        { onConflict: "user_id,service_name" }
+      )
+      .select()
+      .single();
+
+    if (!error && data) {
+      setServices((prev) => {
+        const exists = prev.find((s) => s.service_name === data.service_name);
+        if (exists) {
+          return prev.map((s) =>
+            s.service_name === data.service_name ? data : s
+          );
+        }
+        return [...prev, data];
+      });
+      setMonthlyCost("");
+    }
+    setLoading(false);
+  }
+
+  async function handleDelete(id: string) {
+    const { error } = await supabase
+      .from("streampass_user_services")
+      .delete()
+      .eq("id", id);
+    if (!error) setServices(services.filter((s) => s.id !== id));
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="grid gap-4 sm:grid-cols-3">
+        <div className="card">
+          <p className="text-xs uppercase tracking-wider text-muted">
+            Monthly Total
+          </p>
+          <p className="mt-1 text-2xl font-bold">{formatCurrency(totalSpend)}</p>
+        </div>
+        <div className="card">
+          <p className="text-xs uppercase tracking-wider text-muted">
+            Active Services
+          </p>
+          <p className="mt-1 text-2xl font-bold">{services.length}</p>
+        </div>
+        <div className="card">
+          <p className="text-xs uppercase tracking-wider text-muted">
+            Potential Savings
+          </p>
+          <p className="mt-1 text-2xl font-bold text-warning">
+            {formatCurrency(savingsOpportunity)}/mo
+          </p>
+          {idleServices.length > 0 && (
+            <p className="mt-1 text-xs text-muted">
+              From {idleServices.length} idle service
+              {idleServices.length > 1 ? "s" : ""}
+            </p>
+          )}
+        </div>
+      </div>
+
+      <form onSubmit={handleAdd} className="card">
+        <h2 className="mb-4 font-semibold">Add Subscription</h2>
+        <div className="grid gap-3 sm:grid-cols-4">
+          <select
+            value={serviceName}
+            onChange={(e) => setServiceName(e.target.value)}
+            className="input"
+          >
+            {STREAMING_SERVICES.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </select>
+          <input
+            type="number"
+            step="0.01"
+            min="0"
+            value={monthlyCost}
+            onChange={(e) => setMonthlyCost(e.target.value)}
+            placeholder="Monthly cost ($)"
+            className="input"
+            required
+          />
+          <button type="submit" disabled={loading} className="btn-primary sm:col-span-2 flex items-center justify-center gap-2">
+            <Plus className="h-4 w-4" />
+            Add Service
+          </button>
+        </div>
+      </form>
+
+      <div className="card">
+        <h2 className="mb-4 font-semibold">Your Subscriptions</h2>
+        {services.length === 0 ? (
+          <p className="text-sm text-muted">
+            No subscriptions tracked yet. Add your streaming services above.
+          </p>
+        ) : (
+          <div className="space-y-2">
+            {services.map((service) => {
+              const days = daysSince(service.last_active_at);
+              const isIdle =
+                days === null || days >= IDLE_DAYS_THRESHOLD;
+
+              return (
+                <div
+                  key={service.id}
+                  className="flex items-center gap-4 rounded-lg border border-card-border bg-background p-4"
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium">{service.service_name}</p>
+                      {isIdle && (
+                        <span className="badge-warning flex items-center gap-1">
+                          <AlertTriangle className="h-3 w-3" />
+                          Idle {days !== null ? `${days}d` : ""}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted">
+                      Last active: {formatRelativeDate(service.last_active_at ?? "")}
+                    </p>
+                  </div>
+                  <p className="font-mono text-sm">
+                    {formatCurrency(Number(service.monthly_cost))}/mo
+                  </p>
+                  <button
+                    onClick={() => handleDelete(service.id)}
+                    className="rounded p-1.5 text-muted transition hover:bg-danger/10 hover:text-danger"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

@@ -1,26 +1,167 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #000000;
+  --foreground: #f4f4f5;
+  --card: #111111;
+  --card-border: rgba(255, 255, 255, 0.06);
+  --muted: #71717a;
+  --magenta: #e879f9;
+  --cyan: #22d3ee;
+  --violet: #8b5cf6;
+  --live: #4ade80;
+  --warning: #fbbf24;
+  --danger: #f87171;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-border: var(--card-border);
+  --color-muted: var(--muted);
+  --color-magenta: var(--magenta);
+  --color-cyan: var(--cyan);
+  --color-violet: var(--violet);
+  --color-live: var(--live);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-accent: var(--magenta);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-display: var(--font-syne);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+.font-display {
+  font-family: var(--font-display), var(--font-sans), system-ui, sans-serif;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #27272a transparent;
+}
+
+/* Ambient */
+.ambient-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  opacity: 0.35;
+  animation: orb-drift 18s ease-in-out infinite alternate;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ambient-orb {
+    animation: none;
+  }
+}
+
+.ambient-orb-magenta {
+  width: 480px;
+  height: 480px;
+  background: #e879f9;
+  top: -120px;
+  right: -80px;
+}
+
+.ambient-orb-cyan {
+  width: 400px;
+  height: 400px;
+  background: #22d3ee;
+  bottom: 10%;
+  left: -100px;
+  animation-delay: -6s;
+}
+
+.ambient-grid {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    rgba(255, 255, 255, 0.04) 1px,
+    transparent 0
+  );
+  background-size: 32px 32px;
+  mask-image: linear-gradient(to bottom, black 0%, transparent 85%);
+}
+
+@keyframes orb-drift {
+  from {
+    transform: translate(0, 0) scale(1);
+  }
+  to {
+    transform: translate(24px, 16px) scale(1.08);
+  }
+}
+
+/* Surfaces */
+.bento-card {
+  @apply relative overflow-hidden rounded-2xl border bg-card/80 p-5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] backdrop-blur-xl backdrop-saturate-150 transition-[transform,border-color,filter] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-px hover:scale-[1.01] hover:brightness-110;
+}
+
+.card {
+  @apply relative overflow-hidden rounded-2xl border border-white/[0.06] bg-card/80 p-5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] backdrop-blur-xl backdrop-saturate-150 transition-[transform,border-color,filter] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-px hover:scale-[1.01] hover:brightness-110;
+}
+
+.btn-primary {
+  @apply rounded-xl bg-gradient-to-r from-magenta to-violet px-5 py-2.5 text-sm font-semibold text-white shadow-[inset_0_1px_0_0_rgba(255,255,255,0.15)] transition-[transform,filter] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-px hover:scale-[1.02] hover:brightness-110 disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:scale-100;
+}
+
+.btn-secondary {
+  @apply rounded-xl border border-white/[0.08] bg-white/[0.03] px-5 py-2.5 text-sm font-medium text-foreground backdrop-blur-md transition-[transform,border-color] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:border-magenta/30 hover:bg-white/[0.06];
+}
+
+.input {
+  @apply w-full rounded-xl border border-white/[0.08] bg-black/40 px-4 py-2.5 text-sm text-foreground outline-none backdrop-blur-sm transition-[border-color,box-shadow] duration-300 focus:border-cyan/50 focus:ring-1 focus:ring-cyan/20;
+}
+
+.badge {
+  @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
+}
+
+.badge-accent,
+.badge-magenta {
+  @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-magenta/15 text-magenta;
+}
+
+.badge-cyan {
+  @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-cyan/15 text-cyan;
+}
+
+.badge-live {
+  @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-live/15 text-live;
+}
+
+.badge-warning {
+  @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-warning/15 text-warning;
+}
+
+.badge-danger {
+  @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-danger/15 text-danger;
+}
+
+.text-gradient {
+  @apply bg-gradient-to-br from-zinc-100 via-zinc-200 to-zinc-500 bg-clip-text text-transparent;
+}
+
+.nav-pill-active {
+  @apply bg-gradient-to-r from-magenta/90 to-violet/90 text-white shadow-[0_0_24px_rgba(232,121,249,0.25)];
+}
+
+.glass-sidebar {
+  @apply border-r border-white/[0.06] bg-black/50 backdrop-blur-2xl backdrop-saturate-150;
+}
+
+.mobile-dock {
+  @apply fixed bottom-0 left-0 right-0 z-50 border-t border-white/[0.06] bg-black/80 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur-2xl lg:hidden;
+}
+
+.press-play-bar {
+  @apply fixed bottom-20 left-4 right-4 z-40 rounded-2xl border border-live/40 bg-live/10 p-4 backdrop-blur-xl lg:bottom-6 lg:left-auto lg:right-8 lg:max-w-md;
 }
