@@ -3,7 +3,14 @@ import { DashboardBento } from "@/components/afterglow/dashboard-bento";
 import { IDLE_DAYS_THRESHOLD } from "@/lib/constants";
 import { daysSince } from "@/lib/utils";
 
+function scheduledAfterLast24Hours(): string {
+  const cutoff = new Date();
+  cutoff.setTime(cutoff.getTime() - 24 * 60 * 60 * 1000);
+  return cutoff.toISOString();
+}
+
 export default async function DashboardPage() {
+  const roomsScheduledAfter = scheduledAfterLast24Hours();
   const supabase = await createClient();
   const {
     data: { user },
@@ -33,10 +40,7 @@ export default async function DashboardPage() {
     supabase
       .from("streampass_watch_rooms")
       .select("*")
-      .gte(
-        "scheduled_time",
-        new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
-      )
+      .gte("scheduled_time", roomsScheduledAfter)
       .order("scheduled_time", { ascending: true })
       .limit(5),
     supabase
