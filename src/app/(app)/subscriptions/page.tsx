@@ -15,7 +15,7 @@ export default async function SubscriptionsPage() {
     .order("service_name");
 
   return (
-    <div className="mx-auto max-w-4xl">
+    <div className="page-shell">
       <PageHeader
         badge="Intelligence"
         title="Subscriptions"

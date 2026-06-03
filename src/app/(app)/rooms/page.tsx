@@ -28,7 +28,7 @@ export default async function RoomsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl">
+    <div className="page-shell">
       <PageHeader
         badge="Social"
         title="Watch Parties"

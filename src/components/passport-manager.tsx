@@ -104,10 +104,7 @@ export function PassportManager({ initialTitles }: PassportManagerProps) {
         ) : (
           <div className="space-y-2">
             {titles.map((item) => (
-              <div
-                key={item.id}
-                className="flex items-start gap-4 rounded-lg border border-card-border bg-background p-4"
-              >
+              <div key={item.id} className="panel-row items-start">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <p className="font-medium">{item.title}</p>

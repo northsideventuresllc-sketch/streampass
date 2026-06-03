@@ -37,8 +37,8 @@ export default async function AppLayout({
         alertCount={alertCount ?? 0}
       />
       <MobileNav alertCount={alertCount ?? 0} />
-      <div className="flex min-h-screen flex-1 flex-col lg:ml-64">
-        <main className="flex-1 px-4 py-6 pt-16 pb-24 lg:px-8 lg:py-8 lg:pb-8 lg:pt-8">
+      <div className="flex min-h-screen flex-1 flex-col bg-transparent lg:ml-[260px]">
+        <main className="relative z-[1] flex-1 bg-transparent px-4 py-6 pt-16 pb-24 lg:px-8 lg:py-8 lg:pb-8 lg:pt-8">
           {children}
         </main>
         <AppFooter />

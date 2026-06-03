@@ -46,18 +46,18 @@ export function Sidebar({ username, alertCount = 0 }: SidebarProps) {
 
   const navContent = (
     <>
-      <div className="mb-10 px-2">
-        <Link href="/dashboard" className="block group">
-          <span className="font-display text-xl font-bold tracking-tight text-gradient">
+      <div className="mb-10 px-1">
+        <Link href="/dashboard" className="block">
+          <span className="font-display text-xl font-bold text-gradient">
             Stream Pass
           </span>
-          <span className="mt-1 block font-mono text-[10px] uppercase tracking-[0.25em] text-muted">
-            Afterglow · NI
+          <span className="mt-1.5 block font-mono text-[10px] uppercase tracking-[0.28em] text-[#71717a]">
+            Afterglow
           </span>
         </Link>
       </div>
 
-      <nav className="flex flex-1 flex-col gap-1.5">
+      <nav className="flex flex-1 flex-col gap-1">
         {NAV_ITEMS.map((item) => {
           const Icon = ICONS[item.icon];
           const active = pathname === item.href;
@@ -69,10 +69,10 @@ export function Sidebar({ username, alertCount = 0 }: SidebarProps) {
               href={item.href}
               onClick={() => setMobileOpen(false)}
               className={cn(
-                "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]",
+                "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-300",
                 active
                   ? "nav-pill-active"
-                  : "text-muted hover:bg-white/[0.04] hover:text-foreground"
+                  : "text-[#a1a1aa] hover:bg-white/[0.05] hover:text-white"
               )}
             >
               <Icon className="h-4 w-4 shrink-0" />
@@ -85,15 +85,16 @@ export function Sidebar({ username, alertCount = 0 }: SidebarProps) {
         })}
       </nav>
 
-      <div className="mt-auto border-t border-white/[0.06] pt-4">
+      <div className="mt-auto border-t border-white/[0.08] pt-4">
         {username && (
-          <p className="mb-3 truncate px-2 font-mono text-xs text-muted">
+          <p className="mb-3 truncate px-1 font-mono text-xs text-[#71717a]">
             {username}
           </p>
         )}
         <button
+          type="button"
           onClick={handleSignOut}
-          className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-muted transition hover:bg-white/[0.04] hover:text-foreground"
+          className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-[#a1a1aa] transition hover:bg-white/[0.05] hover:text-white"
         >
           <LogOut className="h-4 w-4" />
           Sign out
@@ -105,7 +106,8 @@ export function Sidebar({ username, alertCount = 0 }: SidebarProps) {
   return (
     <>
       <button
-        className="fixed left-4 top-4 z-50 rounded-xl border border-white/[0.08] bg-black/60 p-2.5 backdrop-blur-xl lg:hidden"
+        type="button"
+        className="fixed left-4 top-4 z-50 flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-black/80 backdrop-blur-xl lg:hidden"
         onClick={() => setMobileOpen(!mobileOpen)}
         aria-label="Toggle menu"
       >
@@ -113,16 +115,18 @@ export function Sidebar({ username, alertCount = 0 }: SidebarProps) {
       </button>
 
       {mobileOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm lg:hidden"
+        <button
+          type="button"
+          className="fixed inset-0 z-40 bg-black/80 backdrop-blur-sm lg:hidden"
+          aria-label="Close menu"
           onClick={() => setMobileOpen(false)}
         />
       )}
 
       <aside
         className={cn(
-          "glass-sidebar fixed inset-y-0 left-0 z-40 hidden w-64 flex-col p-5 lg:flex",
-          mobileOpen && "!flex translate-x-0"
+          "glass-sidebar fixed inset-y-0 left-0 z-50 flex w-[260px] flex-col p-5 transition-transform duration-300 lg:z-40 lg:translate-x-0",
+          mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         )}
       >
         {navContent}
@@ -133,7 +137,7 @@ export function Sidebar({ username, alertCount = 0 }: SidebarProps) {
 
 export function AppFooter() {
   return (
-    <footer className="hidden border-t border-white/[0.06] py-5 text-center lg:block">
+    <footer className="hidden border-t border-white/[0.08] py-5 text-center lg:block">
       <span className="badge-magenta">A Northside Intelligence Project</span>
     </footer>
   );

@@ -1,16 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
-import { Sparkles, CreditCard, Bell, ListVideo, Users, Play } from "lucide-react";
+import {
+  Sparkles,
+  CreditCard,
+  Bell,
+  ListVideo,
+  Users,
+  Play,
+  Plus,
+} from "lucide-react";
 import { BentoCard } from "./bento-card";
 import { LiveDot } from "./live-dot";
+import { Countdown } from "./countdown";
 import { RecommendationsPanel } from "@/components/recommendations-panel";
 import { bentoContainer } from "@/lib/motion";
-import { formatCurrency, daysSince } from "@/lib/utils";
-import { IDLE_DAYS_THRESHOLD } from "@/lib/constants";
-import { Countdown } from "./countdown";
+import { formatCurrency } from "@/lib/utils";
 import type { UserService, TrackedTitle, WatchRoom } from "@/lib/types";
 
 interface DashboardBentoProps {
@@ -38,8 +44,6 @@ export function DashboardBento({
   watchlistCount,
   alerts,
   rooms,
-  services,
-  idleCount,
 }: DashboardBentoProps) {
   const reduceMotion = useReducedMotion();
   const heroRoom = rooms[0];
@@ -47,225 +51,216 @@ export function DashboardBento({
   const live = heroRoom ? isRoomLive(heroRoom.scheduled_time) : false;
 
   return (
-    <div className="mx-auto max-w-6xl">
-      <header className="mb-8">
-        <p className="mb-2 font-mono text-[10px] uppercase tracking-[0.2em] text-muted">
-          Command center
+    <div className="page-shell">
+      <header className="page-header-3d mb-6 lg:mb-8">
+        <div className="page-header-spotlight" aria-hidden />
+        <p className="relative z-[1] mb-2 font-mono text-[10px] uppercase tracking-[0.25em] text-[#a1a1aa]">
+          Afterglow · Command Center
         </p>
-        <h1 className="font-display text-3xl font-bold tracking-tight md:text-4xl">
+        <h1 className="relative z-[1] font-display text-3xl font-bold tracking-tight md:text-4xl">
           {username ? (
             <>
-              Hey, <span className="text-gradient">{username}</span>
+              Hey,{" "}
+              <span className="text-gradient-hero">{username}</span>
             </>
           ) : (
-            <span className="text-gradient">Stream Pass</span>
+            <span className="text-gradient-hero">Stream Pass</span>
           )}
         </h1>
-        <p className="mt-2 text-sm text-muted">
-          Your cross-platform pulse — live rooms, AI picks, subscription health.
-        </p>
       </header>
 
       <motion.div
         variants={reduceMotion ? undefined : bentoContainer}
-        initial={reduceMotion ? false : "hidden"}
+        initial={false}
         animate="show"
-        className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4 lg:grid-rows-[auto_auto_auto]"
+        className="dashboard-bento"
       >
-        {heroRoom ? (
-          <BentoCard
-            variant="hero"
-            href={`/rooms/${heroRoom.share_code}`}
-            className="lg:col-span-2 lg:row-span-2 min-h-[220px] flex flex-col justify-between"
-          >
-            <div className="flex items-center justify-between">
-              <RowBadge label="Watch Party" live={soon || live} />
-              <Countdown scheduledTime={heroRoom.scheduled_time} />
-            </div>
-            <div>
-              <h2 className="font-display text-2xl font-bold">{heroRoom.title}</h2>
-              <p className="mt-1 text-sm text-muted">
-                <span className="badge-magenta">{heroRoom.platform}</span>
-                <span className="mx-2">·</span>
-                Code {heroRoom.share_code}
-              </p>
-            </div>
-            <div className="mt-4 flex items-center gap-2">
-              {[0, 1, 2].map((i) => (
-                <div
-                  key={i}
-                  className="h-9 w-9 rounded-full border-2 border-card bg-gradient-to-br from-magenta/40 to-violet/40"
-                  style={{ marginLeft: i > 0 ? -10 : 0 }}
-                />
-              ))}
-              <span className="ml-2 text-xs text-muted">Friends syncing</span>
-            </div>
-            {live && (
-              <div className="mt-4 flex items-center gap-2 text-live text-sm font-medium">
-                <Play className="h-4 w-4" />
-                Press Play — open on your device
-              </div>
-            )}
-          </BentoCard>
-        ) : (
-          <BentoCard
-            variant="hero"
-            href="/rooms"
-            className="lg:col-span-2 lg:row-span-2 min-h-[200px] flex flex-col justify-center items-center text-center"
-          >
-            <Users className="mb-3 h-10 w-10 text-magenta" />
-            <h2 className="font-display text-xl font-bold">Start a Watch Party</h2>
-            <p className="mt-2 text-sm text-muted max-w-xs">
-              Create a room, share the code, sync the countdown.
-            </p>
-          </BentoCard>
-        )}
-
-        <BentoCard variant="accent-cyan" className="lg:col-span-1">
-          <CreditCard className="h-4 w-4 text-cyan" />
-          <p className="mt-3 font-mono text-[10px] uppercase tracking-wider text-muted">
-            Monthly spend
-          </p>
-          <p className="mt-1 font-display text-3xl font-bold tabular-nums">
-            {formatCurrency(totalSpend)}
-          </p>
-          {idleCount > 0 && (
-            <p className="mt-2 text-xs text-warning">
-              {idleCount} idle · review savings
-            </p>
-          )}
-          <Link href="/subscriptions" className="mt-3 inline-block text-xs text-cyan hover:underline">
-            Subscriptions →
-          </Link>
-        </BentoCard>
-
-        <BentoCard variant="accent-magenta" className="lg:col-span-1">
-          <ListVideo className="h-4 w-4 text-magenta" />
-          <p className="mt-3 font-mono text-[10px] uppercase tracking-wider text-muted">
-            Queue
-          </p>
-          <p className="mt-1 font-display text-3xl font-bold">{watchlistCount}</p>
-          <Link href="/watchlist" className="mt-3 inline-block text-xs text-magenta hover:underline">
-            Watchlist →
-          </Link>
-        </BentoCard>
-
-        <BentoCard variant="live" className="lg:col-span-2 lg:col-start-3 lg:row-start-2 lg:row-span-2 min-h-[280px]">
-          <div className="mb-3 flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-magenta" />
-            <span className="font-display font-semibold">AI Picks</span>
-          </div>
-          <RecommendationsPanel compact />
-        </BentoCard>
-
-        <BentoCard variant="default" className="lg:col-span-1">
-          <div className="flex items-center gap-2">
-            <Bell className="h-4 w-4 text-warning" />
-            <span className="font-mono text-[10px] uppercase tracking-wider text-muted">
-              Passport
-            </span>
-          </div>
-          <p className="mt-2 font-display text-3xl font-bold">{alerts.length}</p>
-          {alerts.length > 0 ? (
-            <Link href="/passport" className="mt-2 block text-xs text-warning hover:underline">
-              View alerts →
-            </Link>
-          ) : (
-            <p className="mt-2 text-xs text-muted">All clear</p>
-          )}
-        </BentoCard>
-
-        {alerts.length > 0 && (
-          <BentoCard className="col-span-full border-warning/20">
-            <h3 className="mb-3 flex items-center gap-2 font-display font-semibold text-warning">
-              <Bell className="h-4 w-4" />
-              Passport alerts
-            </h3>
-            <div className="flex gap-3 overflow-x-auto pb-1 snap-x snap-mandatory motion-reduce:overflow-visible">
-              {alerts.map((alert) => (
-                <div
-                  key={alert.id}
-                  className="min-w-[240px] snap-start rounded-xl border border-white/[0.06] bg-black/40 p-4"
-                >
-                  <p className="font-medium">{alert.title}</p>
-                  <p className="mt-1 text-xs text-warning">{alert.alert_reason}</p>
+        <motion.div
+          variants={reduceMotion ? undefined : bentoContainer}
+          className="dashboard-bento__main"
+        >
+          {heroRoom ? (
+            <BentoCard
+              variant="hero"
+              href={`/rooms/${heroRoom.share_code}`}
+              className="relative z-[1] flex min-h-[280px] flex-col justify-between"
+            >
+              <div className="relative z-[1] flex items-start justify-between gap-4">
+                <div className="flex items-center gap-2">
+                  {(soon || live) && <LiveDot />}
+                  <span className="badge-live">Watch Party</span>
                 </div>
-              ))}
-            </div>
-          </BentoCard>
-        )}
+                <Countdown scheduledTime={heroRoom.scheduled_time} />
+              </div>
 
-        {services.length > 0 && (
-          <BentoCard className="col-span-full lg:col-span-2">
-            <h3 className="mb-3 font-display font-semibold">Subscription pulse</h3>
-            <div className="space-y-2">
-              {services.slice(0, 4).map((service) => {
-                const days = daysSince(service.last_active_at);
-                const isIdle =
-                  days === null || days >= IDLE_DAYS_THRESHOLD;
-                return (
-                  <div
-                    key={service.id}
-                    className="flex items-center justify-between rounded-xl bg-black/30 px-3 py-2"
-                  >
-                    <span className="text-sm">{service.service_name}</span>
-                    <span className={isIdle ? "badge-warning" : "badge-live"}>
-                      {isIdle ? "Idle" : "Active"}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          </BentoCard>
-        )}
+              <div className="relative z-[1] mt-6">
+                <h2 className="font-display text-2xl font-bold text-white md:text-3xl">
+                  {heroRoom.title}
+                </h2>
+                <p className="mt-2 flex flex-wrap items-center gap-2 text-sm text-[#a1a1aa]">
+                  <span className="badge-magenta">{heroRoom.platform}</span>
+                  <span>Code {heroRoom.share_code}</span>
+                </p>
+              </div>
 
-        {rooms.length > 1 && (
-          <BentoCard className="col-span-full lg:col-span-2">
-            <h3 className="mb-3 font-display font-semibold">More rooms</h3>
-            <div className="space-y-2">
-              {rooms.slice(1, 4).map((room) => (
-                <Link
-                  key={room.id}
-                  href={`/rooms/${room.share_code}`}
-                  className="flex items-center justify-between rounded-xl bg-black/30 px-3 py-2 transition hover:bg-black/50"
-                >
-                  <span className="text-sm font-medium">{room.title}</span>
-                  <RoomCountdown scheduledTime={room.scheduled_time} />
-                </Link>
-              ))}
+              <div className="relative z-[1] mt-6 flex items-center justify-between">
+                <div className="avatar-stack">
+                  <span />
+                  <span />
+                  <span />
+                </div>
+                <span className="text-xs text-[#a1a1aa]">Friends syncing</span>
+              </div>
+
+              {live && (
+                <div className="relative z-[1] mt-4 flex items-center gap-2 text-sm font-medium text-[#4ade80]">
+                  <Play className="h-4 w-4" />
+                  Press Play on your device
+                </div>
+              )}
+            </BentoCard>
+          ) : (
+            <BentoCard
+              variant="hero"
+              href="/rooms"
+              className="relative z-[1] flex min-h-[280px] flex-col justify-between"
+            >
+              <div className="relative z-[1] flex items-start justify-between gap-4">
+                <div className="flex items-center gap-2">
+                  <LiveDot />
+                  <span className="badge-live">Watch Party · LIVE</span>
+                </div>
+                <span className="countdown-display">00:42:18</span>
+              </div>
+
+              <div className="relative z-[1]">
+                <h2 className="font-display text-2xl font-bold text-white md:text-3xl">
+                  Your next watch party
+                </h2>
+                <p className="mt-2 flex flex-wrap items-center gap-2 text-sm text-[#a1a1aa]">
+                  <span className="badge-magenta">Any platform</span>
+                  <span>Sync · Chat · Press Play together</span>
+                </p>
+              </div>
+
+              <div className="relative z-[1] flex items-center justify-between">
+                <div className="avatar-stack">
+                  <span />
+                  <span />
+                  <span />
+                </div>
+                <span className="inline-flex items-center gap-2 text-sm font-medium text-[#e879f9]">
+                  <Plus className="h-4 w-4" />
+                  Create room
+                </span>
+              </div>
+            </BentoCard>
+          )}
+
+          <div className="dashboard-bento__stats">
+            <BentoCard variant="cyan" tilt className="flex flex-col justify-between">
+              <CreditCard className="h-5 w-5 text-[#22d3ee]" />
+              <div>
+                <p className="font-mono text-[10px] uppercase tracking-widest text-[#a1a1aa]">
+                  Monthly spend
+                </p>
+                <p className="stat-value mt-2 text-white">
+                  {formatCurrency(totalSpend)}
+                </p>
+              </div>
+              <Link
+                href="/subscriptions"
+                className="mt-3 text-xs text-[#22d3ee] hover:underline"
+              >
+                Subscriptions →
+              </Link>
+            </BentoCard>
+
+            <BentoCard variant="magenta" tilt className="flex flex-col justify-between">
+              <ListVideo className="h-5 w-5 text-[#e879f9]" />
+              <div>
+                <p className="font-mono text-[10px] uppercase tracking-widest text-[#a1a1aa]">
+                  Queue
+                </p>
+                <p className="stat-value mt-2 text-white">{watchlistCount}</p>
+              </div>
+              <Link
+                href="/watchlist"
+                className="mt-3 text-xs text-[#e879f9] hover:underline"
+              >
+                Watchlist →
+              </Link>
+            </BentoCard>
+          </div>
+        </motion.div>
+
+        <BentoCard variant="ai" className="dashboard-bento__ai flex flex-col">
+          <div className="mb-4 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-[#e879f9]" />
+              <span className="font-display text-lg font-semibold text-white">
+                AI Picks
+              </span>
             </div>
-          </BentoCard>
-        )}
+          </div>
+          <div className="min-h-0 flex-1">
+            <RecommendationsPanel compact />
+          </div>
+        </BentoCard>
       </motion.div>
-    </div>
-  );
-}
 
-function RoomCountdown({ scheduledTime }: { scheduledTime: string }) {
-  const [text, setText] = useState("");
-  useEffect(() => {
-    function tick() {
-      const diff = new Date(scheduledTime).getTime() - Date.now();
-      if (diff <= 0) {
-        setText("Live");
-        return;
-      }
-      const m = Math.floor(diff / 60000);
-      const h = Math.floor(m / 60);
-      setText(h > 0 ? `${h}h ${m % 60}m` : `${m}m`);
-    }
-    tick();
-    const id = setInterval(tick, 30000);
-    return () => clearInterval(id);
-  }, [scheduledTime]);
-  return <span className="font-mono text-xs text-cyan">{text}</span>;
-}
+      {(alerts.length > 0 || rooms.length > 1) && (
+        <div className="mt-4 grid gap-4 md:grid-cols-2">
+          {alerts.length > 0 && (
+            <BentoCard className="border-[rgba(251,191,36,0.3)]">
+              <div className="mb-3 flex items-center gap-2">
+                <Bell className="h-4 w-4 text-[#fbbf24]" />
+                <span className="font-display font-semibold text-[#fbbf24]">
+                  Passport · {alerts.length}
+                </span>
+              </div>
+              <div className="flex gap-3 overflow-x-auto pb-1">
+                {alerts.map((alert) => (
+                  <div
+                    key={alert.id}
+                    className="min-w-[200px] shrink-0 rounded-xl border border-white/10 bg-black/50 p-3"
+                  >
+                    <p className="text-sm font-medium text-white">
+                      {alert.title}
+                    </p>
+                    <p className="mt-1 text-xs text-[#fbbf24]">
+                      {alert.alert_reason}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </BentoCard>
+          )}
 
-function RowBadge({ label, live }: { label: string; live: boolean }) {
-  return (
-    <div className="flex items-center gap-2">
-      {live && <LiveDot />}
-      <span className="badge-live">{label}</span>
+          {rooms.length > 1 && (
+            <BentoCard>
+              <div className="mb-3 flex items-center gap-2">
+                <Users className="h-4 w-4 text-[#e879f9]" />
+                <span className="font-display font-semibold text-white">
+                  More rooms
+                </span>
+              </div>
+              <div className="space-y-2">
+                {rooms.slice(1, 3).map((room) => (
+                  <Link
+                    key={room.id}
+                    href={`/rooms/${room.share_code}`}
+                    className="flex items-center justify-between rounded-lg bg-black/40 px-3 py-2 text-sm transition hover:bg-black/60"
+                  >
+                    <span className="text-white">{room.title}</span>
+                    <span className="badge-magenta">{room.platform}</span>
+                  </Link>
+                ))}
+              </div>
+            </BentoCard>
+          )}
+        </div>
+      )}
     </div>
   );
 }

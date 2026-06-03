@@ -81,27 +81,27 @@ export function SubscriptionsManager({
   return (
     <div className="space-y-6">
       <div className="grid gap-4 sm:grid-cols-3">
-        <div className="card">
-          <p className="text-xs uppercase tracking-wider text-muted">
+        <div className="bento-card bento-cyan">
+          <p className="font-mono text-[10px] uppercase tracking-widest text-[#a1a1aa]">
             Monthly Total
           </p>
-          <p className="mt-1 text-2xl font-bold">{formatCurrency(totalSpend)}</p>
+          <p className="stat-value mt-2 text-white">{formatCurrency(totalSpend)}</p>
         </div>
-        <div className="card">
-          <p className="text-xs uppercase tracking-wider text-muted">
+        <div className="bento-card bento-magenta">
+          <p className="font-mono text-[10px] uppercase tracking-widest text-[#a1a1aa]">
             Active Services
           </p>
-          <p className="mt-1 text-2xl font-bold">{services.length}</p>
+          <p className="stat-value mt-2 text-white">{services.length}</p>
         </div>
-        <div className="card">
-          <p className="text-xs uppercase tracking-wider text-muted">
+        <div className="bento-card border-[rgba(251,191,36,0.35)]">
+          <p className="font-mono text-[10px] uppercase tracking-widest text-[#a1a1aa]">
             Potential Savings
           </p>
-          <p className="mt-1 text-2xl font-bold text-warning">
+          <p className="stat-value mt-2 text-[#fbbf24]">
             {formatCurrency(savingsOpportunity)}/mo
           </p>
           {idleServices.length > 0 && (
-            <p className="mt-1 text-xs text-muted">
+            <p className="mt-1 text-xs text-[#a1a1aa]">
               From {idleServices.length} idle service
               {idleServices.length > 1 ? "s" : ""}
             </p>
@@ -154,10 +154,7 @@ export function SubscriptionsManager({
                 days === null || days >= IDLE_DAYS_THRESHOLD;
 
               return (
-                <div
-                  key={service.id}
-                  className="flex items-center gap-4 rounded-lg border border-card-border bg-background p-4"
-                >
+                <div key={service.id} className="panel-row">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <p className="font-medium">{service.service_name}</p>

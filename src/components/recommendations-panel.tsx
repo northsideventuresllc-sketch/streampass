@@ -98,8 +98,23 @@ export function RecommendationsPanel({ compact = false }: { compact?: boolean })
         <p className="text-sm text-[#a1a1aa]">Analyzing watch history…</p>
       )}
       {error && <p className="text-sm text-[#f87171]">{error}</p>}
-      {message && !loading && (
-        <p className="text-sm text-[#a1a1aa]">{message}</p>
+      {message && !loading && !featured && (
+        <div className="ai-pick-featured">
+          <p className="font-mono text-[10px] uppercase tracking-widest text-[#e879f9]">
+            Preview
+          </p>
+          <h3 className="mt-2 font-display text-xl font-bold text-white">
+            Shōgun
+          </h3>
+          <p className="mt-2 text-sm text-[#a1a1aa]">
+            {message ||
+              "Add watched titles to your queue to unlock personalized AI picks across every platform."}
+          </p>
+          <div className="mt-3 flex items-center justify-between">
+            <span className="badge-magenta">Hulu</span>
+            <span className="text-xs text-[#71717a]">Example layout</span>
+          </div>
+        </div>
       )}
 
       {!loading && featured && (

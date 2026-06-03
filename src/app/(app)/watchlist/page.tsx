@@ -15,7 +15,7 @@ export default async function WatchlistPage() {
     .order("priority_order", { ascending: true });
 
   return (
-    <div className="mx-auto max-w-4xl">
+    <div className="page-shell">
       <PageHeader
         badge="Library"
         title="Watchlist"
