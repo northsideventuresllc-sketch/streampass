@@ -40,6 +40,7 @@ export default async function DashboardPage() {
     supabase
       .from("streampass_watch_rooms")
       .select("*")
+      .eq("room_type", "watch")
       .gte("scheduled_time", roomsScheduledAfter)
       .order("scheduled_time", { ascending: true })
       .limit(5),

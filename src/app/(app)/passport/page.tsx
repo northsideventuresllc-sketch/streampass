@@ -19,7 +19,7 @@ export default async function PassportPage() {
       <PageHeader
         badge="Alerts"
         title="Content Passport"
-        subtitle="Track titles — get notified when they move or expire."
+        subtitle="Track shows and movies — get notified when they move or expire."
       />
       <PassportManager initialTitles={titles ?? []} />
     </div>

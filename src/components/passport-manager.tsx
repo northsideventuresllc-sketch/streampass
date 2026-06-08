@@ -3,7 +3,9 @@
 import { useState } from "react";
 import { Bell, BellOff, Plus, Trash2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { STREAMING_SERVICES } from "@/lib/constants";
+import { VIDEO_STREAMING_SERVICES } from "@/lib/constants";
+import { PlatformSelect } from "@/components/platform-select";
+import { PassportQuickAdd } from "@/components/passport-quick-add";
 import type { TrackedTitle } from "@/lib/types";
 
 interface PassportManagerProps {
@@ -13,7 +15,7 @@ interface PassportManagerProps {
 export function PassportManager({ initialTitles }: PassportManagerProps) {
   const [titles, setTitles] = useState(initialTitles);
   const [title, setTitle] = useState("");
-  const [platform, setPlatform] = useState<string>(STREAMING_SERVICES[0]);
+  const [platform, setPlatform] = useState<string>(VIDEO_STREAMING_SERVICES[0]);
   const [loading, setLoading] = useState(false);
   const supabase = createClient();
 
@@ -22,7 +24,9 @@ export function PassportManager({ initialTitles }: PassportManagerProps) {
     if (!title.trim()) return;
     setLoading(true);
 
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) return;
 
     const { data, error } = await supabase
@@ -65,32 +69,36 @@ export function PassportManager({ initialTitles }: PassportManagerProps) {
 
   return (
     <div className="space-y-6">
+      <PassportQuickAdd
+        titles={titles}
+        onAdded={(title) => setTitles((prev) => [title, ...prev])}
+      />
+
       <form onSubmit={handleTrack} className="card">
         <h2 className="mb-4 font-semibold">Track a Title</h2>
         <p className="mb-4 text-sm text-muted">
-          Get alerts when a tracked title changes platforms or is expiring soon.
+          Track shows and movies — get alerts when they move platforms or are
+          expiring soon.
         </p>
         <div className="grid gap-3 sm:grid-cols-3">
           <input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Title to track"
+            placeholder="Show or movie to track"
             className="input"
             required
           />
-          <select
+          <PlatformSelect
             value={platform}
-            onChange={(e) => setPlatform(e.target.value)}
-            className="input"
+            onChange={setPlatform}
+            mediaType="video"
+          />
+          <button
+            type="submit"
+            disabled={loading}
+            className="btn-primary flex items-center justify-center gap-2"
           >
-            {STREAMING_SERVICES.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
-          <button type="submit" disabled={loading} className="btn-primary flex items-center justify-center gap-2">
             <Plus className="h-4 w-4" />
             Track
           </button>

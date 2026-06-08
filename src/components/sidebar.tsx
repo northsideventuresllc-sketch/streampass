@@ -9,14 +9,21 @@ import {
   CreditCard,
   Bell,
   Users,
+  Search,
   LogOut,
   Menu,
   X,
+  Headphones,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { NAV_ITEMS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
+import {
+  StreamPassLogo,
+  useSparkInLogo,
+} from "@/components/afterglow/streampass-logo";
+import { NorthsideFooter } from "@/components/afterglow/northside-footer";
 
 const ICONS = {
   LayoutDashboard,
@@ -25,6 +32,8 @@ const ICONS = {
   CreditCard,
   Bell,
   Users,
+  Search,
+  Headphones,
 } as const;
 
 interface SidebarProps {
@@ -37,6 +46,7 @@ export function Sidebar({ username, alertCount = 0 }: SidebarProps) {
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
   const supabase = useMemo(() => createClient(), []);
+  const { spark, clearSpark } = useSparkInLogo();
 
   async function handleSignOut() {
     await supabase.auth.signOut();
@@ -48,9 +58,11 @@ export function Sidebar({ username, alertCount = 0 }: SidebarProps) {
     <>
       <div className="mb-10 px-1">
         <Link href="/dashboard" className="block">
-          <span className="font-display text-xl font-bold text-gradient">
-            Stream Pass
-          </span>
+          <StreamPassLogo
+            size="nav"
+            sparkIn={spark}
+            onSparkComplete={clearSpark}
+          />
           <span className="mt-1.5 block font-mono text-[10px] uppercase tracking-[0.28em] text-[#71717a]">
             Afterglow
           </span>
@@ -137,8 +149,8 @@ export function Sidebar({ username, alertCount = 0 }: SidebarProps) {
 
 export function AppFooter() {
   return (
-    <footer className="hidden border-t border-white/[0.08] py-5 text-center lg:block">
-      <span className="badge-magenta">A Northside Intelligence Project</span>
+    <footer className="hidden border-t border-white/[0.08] py-5 lg:block">
+      <NorthsideFooter />
     </footer>
   );
 }

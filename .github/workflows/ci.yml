@@ -19,6 +19,7 @@ jobs:
       SUPABASE_SERVICE_ROLE_KEY: ci-build-placeholder
       ANTHROPIC_API_KEY: ci-build-placeholder
       STREAMPASS_ADMIN_KEY: ci-build-placeholder
+      TMDB_API_KEY: ci-build-placeholder
     steps:
       - name: Checkout
         uses: actions/checkout@v4

@@ -3,7 +3,13 @@
 import { useState } from "react";
 import { Plus, Trash2, AlertTriangle } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { STREAMING_SERVICES, IDLE_DAYS_THRESHOLD } from "@/lib/constants";
+import {
+  IDLE_DAYS_THRESHOLD,
+  VIDEO_STREAMING_SERVICES,
+  isMusicService,
+  isVideoService,
+} from "@/lib/constants";
+import { PlatformSelect } from "@/components/platform-select";
 import type { UserService } from "@/lib/types";
 import { formatCurrency, daysSince, formatRelativeDate } from "@/lib/utils";
 
@@ -15,7 +21,9 @@ export function SubscriptionsManager({
   initialServices,
 }: SubscriptionsManagerProps) {
   const [services, setServices] = useState(initialServices);
-  const [serviceName, setServiceName] = useState<string>(STREAMING_SERVICES[0]);
+  const [serviceName, setServiceName] = useState<string>(
+    VIDEO_STREAMING_SERVICES[0]
+  );
   const [monthlyCost, setMonthlyCost] = useState("");
   const [loading, setLoading] = useState(false);
   const supabase = createClient();
@@ -78,6 +86,52 @@ export function SubscriptionsManager({
     if (!error) setServices(services.filter((s) => s.id !== id));
   }
 
+  const videoServices = services.filter((s) => isVideoService(s.service_name));
+  const musicServices = services.filter((s) => isMusicService(s.service_name));
+
+  function renderServiceList(items: UserService[], emptyLabel: string) {
+    if (items.length === 0) {
+      return <p className="text-sm text-muted">{emptyLabel}</p>;
+    }
+
+    return (
+      <div className="space-y-2">
+        {items.map((service) => {
+          const days = daysSince(service.last_active_at);
+          const isIdle = days === null || days >= IDLE_DAYS_THRESHOLD;
+
+          return (
+            <div key={service.id} className="panel-row">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <p className="font-medium">{service.service_name}</p>
+                  {isIdle && (
+                    <span className="badge-warning flex items-center gap-1">
+                      <AlertTriangle className="h-3 w-3" />
+                      Idle {days !== null ? `${days}d` : ""}
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-muted">
+                  Last active: {formatRelativeDate(service.last_active_at ?? "")}
+                </p>
+              </div>
+              <p className="font-mono text-sm">
+                {formatCurrency(Number(service.monthly_cost))}/mo
+              </p>
+              <button
+                onClick={() => handleDelete(service.id)}
+                className="rounded p-1.5 text-muted transition hover:bg-danger/10 hover:text-danger"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="grid gap-4 sm:grid-cols-3">
@@ -112,17 +166,11 @@ export function SubscriptionsManager({
       <form onSubmit={handleAdd} className="card">
         <h2 className="mb-4 font-semibold">Add Subscription</h2>
         <div className="grid gap-3 sm:grid-cols-4">
-          <select
+          <PlatformSelect
             value={serviceName}
-            onChange={(e) => setServiceName(e.target.value)}
-            className="input"
-          >
-            {STREAMING_SERVICES.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
+            onChange={setServiceName}
+            mediaType="all"
+          />
           <input
             type="number"
             step="0.01"
@@ -144,43 +192,24 @@ export function SubscriptionsManager({
         <h2 className="mb-4 font-semibold">Your Subscriptions</h2>
         {services.length === 0 ? (
           <p className="text-sm text-muted">
-            No subscriptions tracked yet. Add your streaming services above.
+            No subscriptions tracked yet. Add your video and music services above.
           </p>
         ) : (
-          <div className="space-y-2">
-            {services.map((service) => {
-              const days = daysSince(service.last_active_at);
-              const isIdle =
-                days === null || days >= IDLE_DAYS_THRESHOLD;
-
-              return (
-                <div key={service.id} className="panel-row">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <p className="font-medium">{service.service_name}</p>
-                      {isIdle && (
-                        <span className="badge-warning flex items-center gap-1">
-                          <AlertTriangle className="h-3 w-3" />
-                          Idle {days !== null ? `${days}d` : ""}
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-xs text-muted">
-                      Last active: {formatRelativeDate(service.last_active_at ?? "")}
-                    </p>
-                  </div>
-                  <p className="font-mono text-sm">
-                    {formatCurrency(Number(service.monthly_cost))}/mo
-                  </p>
-                  <button
-                    onClick={() => handleDelete(service.id)}
-                    className="rounded p-1.5 text-muted transition hover:bg-danger/10 hover:text-danger"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
-              );
-            })}
+          <div className="space-y-6">
+            <div>
+              <h3 className="mb-3 text-sm font-medium text-muted">Video streaming</h3>
+              {renderServiceList(
+                videoServices,
+                "No video subscriptions tracked yet."
+              )}
+            </div>
+            <div>
+              <h3 className="mb-3 text-sm font-medium text-muted">Music streaming</h3>
+              {renderServiceList(
+                musicServices,
+                "No music subscriptions tracked yet."
+              )}
+            </div>
           </div>
         )}
       </div>

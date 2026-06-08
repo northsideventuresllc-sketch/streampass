@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { SPARK_IN_KEY } from "@/components/afterglow/streampass-logo";
 
 interface AuthFormProps {
   mode: "login" | "signup";
@@ -10,6 +11,7 @@ interface AuthFormProps {
 
 export function AuthForm({ mode }: AuthFormProps) {
   const supabase = useMemo(() => createClient(), []);
+  const [identifier, setIdentifier] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
@@ -37,13 +39,32 @@ export function AuthForm({ mode }: AuthFormProps) {
         setMessage("Check your email to confirm your account, then sign in.");
       }
     } else {
+      const loginId = identifier.trim();
+      let resolvedEmail = loginId;
+
+      if (!loginId.includes("@")) {
+        const res = await fetch("/api/auth/resolve-email", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ identifier: loginId }),
+        });
+        const payload = (await res.json()) as { email?: string; error?: string };
+        if (!res.ok || !payload.email) {
+          setError(payload.error ?? "Invalid email or username");
+          setLoading(false);
+          return;
+        }
+        resolvedEmail = payload.email;
+      }
+
       const { error: signInError } = await supabase.auth.signInWithPassword({
-        email,
+        email: resolvedEmail,
         password,
       });
       if (signInError) {
         setError(signInError.message);
       } else {
+        sessionStorage.setItem(SPARK_IN_KEY, "1");
         window.location.href = "/dashboard";
       }
     }
@@ -70,15 +91,20 @@ export function AuthForm({ mode }: AuthFormProps) {
 
       <div>
         <label className="mb-1.5 block text-xs font-medium text-muted">
-          Email
+          {mode === "login" ? "Email or username" : "Email"}
         </label>
         <input
-          type="email"
+          type={mode === "login" ? "text" : "email"}
           required
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          autoComplete={mode === "login" ? "username" : "email"}
+          value={mode === "login" ? identifier : email}
+          onChange={(e) =>
+            mode === "login"
+              ? setIdentifier(e.target.value)
+              : setEmail(e.target.value)
+          }
           className="input"
-          placeholder="you@example.com"
+          placeholder={mode === "login" ? "you@example.com or yourname" : "you@example.com"}
         />
       </div>
 

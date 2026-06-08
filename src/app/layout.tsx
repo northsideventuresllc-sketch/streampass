@@ -1,5 +1,4 @@
-import { Geist, Geist_Mono } from "next/font/google";
-import { Syne } from "next/font/google";
+import { Geist, Geist_Mono, Orbitron, Exo_2 } from "next/font/google";
 import type { Metadata } from "next";
 import "./globals.css";
 
@@ -13,16 +12,22 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const syne = Syne({
-  variable: "--font-syne",
+const orbitron = Orbitron({
+  variable: "--font-orbitron",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+  weight: ["400", "500", "600", "700", "800", "900"],
+});
+
+const exo2 = Exo_2({
+  variable: "--font-exo",
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
-  title: "Stream Pass — Cross-Platform Streaming Command Center",
+  title: "Stream Pass — Where your watchlist outruns the algorithm",
   description:
-    "Metadata, social, and intelligence layer for all your streaming platforms. A Northside Intelligence Project.",
+    "Track subscriptions, sync watchlists, host watch parties, and catch platform drops. © Northside Intelligence.",
 };
 
 export default function RootLayout({
@@ -33,7 +38,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${syne.variable} min-h-screen antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${orbitron.variable} ${exo2.variable} min-h-screen antialiased`}
       >
         {children}
       </body>

@@ -25,6 +25,10 @@ export interface WatchlistItem {
   priority_order: number;
   added_at: string;
   watched_at: string | null;
+  external_id?: string | null;
+  media_type?: "movie" | "tv" | null;
+  poster_url?: string | null;
+  release_year?: number | null;
 }
 
 export interface TrackedTitle {
@@ -39,6 +43,8 @@ export interface TrackedTitle {
   tracked_at: string;
 }
 
+export type RoomType = "watch" | "listen";
+
 export interface WatchRoom {
   id: string;
   created_by: string;
@@ -47,6 +53,7 @@ export interface WatchRoom {
   scheduled_time: string;
   share_code: string;
   created_at: string;
+  room_type?: RoomType;
 }
 
 export interface RoomMember {
@@ -54,6 +61,43 @@ export interface RoomMember {
   room_id: string;
   user_id: string;
   joined_at: string;
+  listening_platform?: string | null;
+}
+
+export interface ConnectedAccount {
+  id: string;
+  user_id: string;
+  platform: string;
+  platform_user_id: string | null;
+  display_name: string | null;
+  connected_at: string;
+}
+
+export interface JamQueueItem {
+  id: string;
+  room_id: string;
+  added_by: string;
+  track_title: string;
+  track_artist: string;
+  track_album: string | null;
+  track_artwork_url: string | null;
+  track_duration_ms: number | null;
+  isrc: string | null;
+  spotify_uri: string | null;
+  spotify_url: string | null;
+  apple_music_url: string | null;
+  position: number;
+  votes: number;
+  added_at: string;
+}
+
+export interface JamState {
+  room_id: string;
+  queue_item_id: string | null;
+  started_at: string | null;
+  is_playing: boolean;
+  updated_by: string | null;
+  updated_at: string;
 }
 
 export interface RoomMessage {

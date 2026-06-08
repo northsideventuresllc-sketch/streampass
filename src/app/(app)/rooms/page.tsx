@@ -23,6 +23,7 @@ export default async function RoomsPage() {
       .from("streampass_watch_rooms")
       .select("*")
       .in("id", roomIds)
+      .eq("room_type", "watch")
       .order("scheduled_time", { ascending: false });
     rooms = data ?? [];
   }

@@ -17,6 +17,7 @@ export default async function RoomPage({ params }: RoomPageProps) {
     .from("streampass_watch_rooms")
     .select("*")
     .eq("share_code", code.toUpperCase())
+    .eq("room_type", "watch")
     .single();
 
   if (!room) notFound();

@@ -25,7 +25,12 @@ Cross-platform streaming aggregator and command center — a metadata, social, a
 
 ## Getting Started
 
-### 1. Clone & install
+### 1. Prerequisites
+
+- **Node.js** 20.9+ (LTS recommended)
+- **npm** 10+
+
+### 2. Clone & install
 
 ```bash
 git clone https://github.com/northsideventuresllc-sketch/streampass.git
@@ -33,43 +38,62 @@ cd streampass
 npm install
 ```
 
-### 2. Environment variables
+### 3. Environment variables
 
-Copy `.env.local.example` to `.env.local` and fill in:
-
-| Variable | Description |
-|----------|-------------|
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon/publishable key |
-| `SUPABASE_SERVICE_ROLE_KEY` | Service role key (admin API only) |
-| `ANTHROPIC_API_KEY` | Anthropic API key for recommendations |
-| `STREAMPASS_ADMIN_KEY` | Admin key for passport updates |
-
-### 3. Supabase (Northside Intelligence Brain)
-
-Stream Pass is deployed on the **Northside Intelligence Brain** Supabase project (shared with other NI apps).
-
-| | |
-|---|---|
-| **Project** | Northside Intelligence Brain |
-| **Project ID** | `kxijunwgbrlfzvgkhklo` |
-| **Dashboard** | [supabase.com/dashboard/project/kxijunwgbrlfzvgkhklo](https://supabase.com/dashboard/project/kxijunwgbrlfzvgkhklo) |
-
-Schema is already applied (`streampass_*` tables + RLS + Realtime). To link the CLI:
+Copy `.env.local.example` to `.env.local` and fill in real values from the Supabase dashboard:
 
 ```bash
-supabase link --project-ref kxijunwgbrlfzvgkhklo
+cp .env.local.example .env.local
 ```
 
-See `supabase/README.md` for table reference and auth redirect URLs.
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `NEXT_PUBLIC_SUPABASE_URL` | Yes | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes | Supabase anon/publishable key |
+| `SUPABASE_SERVICE_ROLE_KEY` | Yes | Service role key (username login + admin API) |
+| `ANTHROPIC_API_KEY` | Yes | Anthropic API key for AI recommendations |
+| `TMDB_API_KEY` | Yes | TMDB API key for search/discover |
+| `STREAMPASS_ADMIN_KEY` | Yes | Admin key for passport updates |
+| `SPOTIFY_CLIENT_ID` | No | Spotify OAuth (music connect + search) |
+| `SPOTIFY_CLIENT_SECRET` | No | Spotify OAuth secret |
 
-### 4. Run locally
+Local dev uses the **remote** Northside Intelligence Brain Supabase project — no local Supabase stack required.
+
+### 4. Supabase auth (one-time)
+
+In [Supabase → Authentication → URL Configuration](https://supabase.com/dashboard/project/kxijunwgbrlfzvgkhklo/auth/url-configuration), ensure redirect URLs include:
+
+- `http://localhost:3000/**`
+- `http://127.0.0.1:3000/**`
+
+See `supabase/README.md` for table reference and CLI linking.
+
+### 5. Run locally
 
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open [http://127.0.0.1:3000](http://127.0.0.1:3000).
+
+**First load** can take 30–90 seconds while Next.js compiles middleware and the home page. Subsequent navigations are much faster.
+
+#### Useful scripts
+
+| Command | Purpose |
+|---------|---------|
+| `npm run dev` | Dev server (webpack, `127.0.0.1:3000`) |
+| `npm run dev:turbo` | Dev server with Turbopack |
+| `npm run dev:clean` | Clear `.next` cache, then start dev |
+| `npm run build` | Production build |
+| `npm run start` | Serve production build |
+
+#### Troubleshooting
+
+- **Port 3000 in use** — stop the other process (`lsof -ti :3000 | xargs kill`) or run `npm run dev:clean`.
+- **Stale dev server / hung requests** — run `npm run dev:clean`.
+- **"Another next dev server is already running"** — kill the PID shown in the error, then restart.
+- **Very slow compiles** — the repo path is deeply nested; moving the project to a shorter path (e.g. `~/Projects/streampass`) speeds up file watching.
 
 ## Project Structure
 

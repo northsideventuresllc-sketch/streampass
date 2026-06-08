@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { AuthForm } from "@/components/auth-form";
 import { AmbientBg } from "@/components/afterglow/ambient-bg";
+import { StreamPassLogo } from "@/components/afterglow/streampass-logo";
 
 export default function SignupPage() {
   return (
@@ -8,10 +9,10 @@ export default function SignupPage() {
       <AmbientBg />
       <div className="relative z-10 w-full max-w-md">
         <div className="mb-10 text-center">
-          <Link href="/" className="font-display text-3xl font-bold text-gradient">
-            Stream Pass
+          <Link href="/" className="inline-block">
+            <StreamPassLogo size="auth" />
           </Link>
-          <p className="mt-3 text-sm text-muted">Create your command center</p>
+          <p className="mt-4 text-sm text-muted">Create your account</p>
         </div>
         <div className="card">
           <AuthForm mode="signup" />

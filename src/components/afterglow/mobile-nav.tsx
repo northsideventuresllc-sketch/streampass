@@ -9,6 +9,8 @@ import {
   CreditCard,
   Bell,
   Users,
+  Search,
+  Headphones,
 } from "lucide-react";
 import { NAV_ITEMS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
@@ -20,6 +22,8 @@ const ICONS = {
   CreditCard,
   Bell,
   Users,
+  Search,
+  Headphones,
 } as const;
 
 interface MobileNavProps {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import {
   GripVertical,
   ExternalLink,
@@ -8,52 +9,25 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { STREAMING_SERVICES, STATUS_LABELS, WATCHLIST_STATUSES } from "@/lib/constants";
+import { STATUS_LABELS, WATCHLIST_STATUSES } from "@/lib/constants";
 import { getPlatformDeepLink } from "@/lib/platform-links";
-import type { WatchlistItem } from "@/lib/types";
+import { WatchlistQuickAdd } from "@/components/watchlist-quick-add";
+import type { TrackedTitle, WatchlistItem } from "@/lib/types";
 import type { WatchlistStatus } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
 interface WatchlistManagerProps {
   initialItems: WatchlistItem[];
+  initialTrackedTitles?: TrackedTitle[];
 }
 
-export function WatchlistManager({ initialItems }: WatchlistManagerProps) {
+export function WatchlistManager({
+  initialItems,
+  initialTrackedTitles = [],
+}: WatchlistManagerProps) {
   const [items, setItems] = useState(initialItems);
-  const [title, setTitle] = useState("");
-  const [platform, setPlatform] = useState<string>(STREAMING_SERVICES[0]);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
-  const [loading, setLoading] = useState(false);
   const supabase = createClient();
-
-  async function handleAdd(e: React.FormEvent) {
-    e.preventDefault();
-    if (!title.trim()) return;
-    setLoading(true);
-
-    const maxOrder = items.reduce((max, i) => Math.max(max, i.priority_order), -1);
-
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const { data, error } = await supabase
-      .from("streampass_watchlist")
-      .insert({
-        user_id: user.id,
-        title: title.trim(),
-        platform,
-        status: "queued",
-        priority_order: maxOrder + 1,
-      })
-      .select()
-      .single();
-
-    if (!error && data) {
-      setItems([...items, data]);
-      setTitle("");
-    }
-    setLoading(false);
-  }
 
   async function updateStatus(id: string, status: WatchlistStatus) {
     const updates: Partial<WatchlistItem> = { status };
@@ -117,33 +91,11 @@ export function WatchlistManager({ initialItems }: WatchlistManagerProps) {
 
   return (
     <div className="space-y-6">
-      <form onSubmit={handleAdd} className="card">
-        <h2 className="mb-4 font-semibold">Add to Watchlist</h2>
-        <div className="grid gap-3 sm:grid-cols-3">
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Title name"
-            className="input sm:col-span-1"
-            required
-          />
-          <select
-            value={platform}
-            onChange={(e) => setPlatform(e.target.value)}
-            className="input"
-          >
-            {STREAMING_SERVICES.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
-          <button type="submit" disabled={loading} className="btn-primary">
-            Add
-          </button>
-        </div>
-      </form>
+      <WatchlistQuickAdd
+        items={items}
+        trackedTitles={initialTrackedTitles}
+        onAdded={(item) => setItems((prev) => [...prev, item])}
+      />
 
       <div className="card">
         <h2 className="mb-4 font-semibold">
@@ -151,7 +103,7 @@ export function WatchlistManager({ initialItems }: WatchlistManagerProps) {
         </h2>
         {activeItems.length === 0 ? (
           <p className="text-sm text-muted">
-            Your queue is empty. Add titles above to get started.
+            Your queue is empty. Use Search or Quick add above to save titles.
           </p>
         ) : (
           <div className="space-y-2">
@@ -168,9 +120,28 @@ export function WatchlistManager({ initialItems }: WatchlistManagerProps) {
                 )}
               >
                 <GripVertical className="h-4 w-4 shrink-0 cursor-grab text-muted" />
+
+                {item.poster_url ? (
+                  <Image
+                    src={item.poster_url}
+                    alt=""
+                    width={44}
+                    height={66}
+                    className="h-[66px] w-[44px] shrink-0 rounded-lg object-cover"
+                    unoptimized
+                  />
+                ) : (
+                  <div className="h-[66px] w-[44px] shrink-0 rounded-lg bg-white/[0.04]" />
+                )}
+
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-medium">{item.title}</p>
-                  <span className="badge-magenta mt-1">{item.platform}</span>
+                  <div className="mt-1 flex flex-wrap items-center gap-2">
+                    <span className="badge-magenta">{item.platform}</span>
+                    {item.release_year && (
+                      <span className="text-xs text-muted">{item.release_year}</span>
+                    )}
+                  </div>
                 </div>
 
                 <div className="relative">
@@ -179,7 +150,7 @@ export function WatchlistManager({ initialItems }: WatchlistManagerProps) {
                     onChange={(e) =>
                       updateStatus(item.id, e.target.value as WatchlistStatus)
                     }
-                    className="input w-auto appearance-none pr-8 py-1.5 text-xs"
+                    className="input w-auto appearance-none py-1.5 pr-8 text-xs"
                   >
                     {WATCHLIST_STATUSES.map((s) => (
                       <option key={s} value={s}>

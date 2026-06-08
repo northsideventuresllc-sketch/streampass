@@ -4,7 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { Plus, Users, Clock } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { STREAMING_SERVICES } from "@/lib/constants";
+import { VIDEO_STREAMING_SERVICES } from "@/lib/constants";
+import { PlatformSelect } from "@/components/platform-select";
 import { generateShareCode } from "@/lib/platform-links";
 import type { WatchRoom } from "@/lib/types";
 
@@ -17,7 +18,7 @@ export function RoomsManager({ initialRooms, userId }: RoomsManagerProps) {
   const [rooms, setRooms] = useState(initialRooms);
   const [showForm, setShowForm] = useState(false);
   const [title, setTitle] = useState("");
-  const [platform, setPlatform] = useState<string>(STREAMING_SERVICES[0]);
+  const [platform, setPlatform] = useState<string>(VIDEO_STREAMING_SERVICES[0]);
   const [scheduledTime, setScheduledTime] = useState("");
   const [loading, setLoading] = useState(false);
   const supabase = createClient();
@@ -37,6 +38,7 @@ export function RoomsManager({ initialRooms, userId }: RoomsManagerProps) {
         platform,
         scheduled_time: new Date(scheduledTime).toISOString(),
         share_code: shareCode,
+        room_type: "watch",
       })
       .select()
       .single();
@@ -83,17 +85,11 @@ export function RoomsManager({ initialRooms, userId }: RoomsManagerProps) {
               className="input"
               required
             />
-            <select
+            <PlatformSelect
               value={platform}
-              onChange={(e) => setPlatform(e.target.value)}
-              className="input"
-            >
-              {STREAMING_SERVICES.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </select>
+              onChange={setPlatform}
+              mediaType="video"
+            />
             <input
               type="datetime-local"
               value={scheduledTime}

@@ -7,7 +7,7 @@ export default function DiscoverPage() {
       <PageHeader
         badge="Discover"
         title="AI Picks"
-        subtitle="Cross-platform recommendations from your watch history."
+        subtitle="Cross-platform video recommendations from your watch history."
       />
       <RecommendationsPanel />
     </div>
