@@ -102,7 +102,6 @@ export function StreamPassLogo({
       onSparkComplete?.();
       return;
     }
-    setSparkActive(true);
     const timer = window.setTimeout(() => {
       setSparkActive(false);
       onSparkComplete?.();
@@ -239,10 +238,9 @@ export function useSparkInLogo() {
   const [spark, setSpark] = useState(false);
 
   useEffect(() => {
-    if (sessionStorage.getItem(SPARK_IN_KEY) === "1") {
-      sessionStorage.removeItem(SPARK_IN_KEY);
-      setSpark(true);
-    }
+    if (sessionStorage.getItem(SPARK_IN_KEY) !== "1") return;
+    sessionStorage.removeItem(SPARK_IN_KEY);
+    void Promise.resolve().then(() => setSpark(true));
   }, []);
 
   const clearSpark = useCallback(() => setSpark(false), []);

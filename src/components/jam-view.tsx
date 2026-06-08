@@ -68,7 +68,9 @@ export function JamView({
   const [jamState, setJamState] = useState(initialState);
   const [members, setMembers] = useState(initialMembers);
   const [newMessage, setNewMessage] = useState("");
-  const [isLive, setIsLive] = useState(false);
+  const [isLive, setIsLive] = useState(
+    () => new Date(room.scheduled_time).getTime() <= Date.now()
+  );
   const [joined, setJoined] = useState(false);
   const [userPlatform, setUserPlatform] = useState(initialUserPlatform);
   const [searchQuery, setSearchQuery] = useState("");
@@ -186,11 +188,9 @@ export function JamView({
   }, [room.id, supabase]);
 
   useEffect(() => {
-    function checkLive() {
+    const interval = setInterval(() => {
       setIsLive(new Date(room.scheduled_time).getTime() <= Date.now());
-    }
-    checkLive();
-    const interval = setInterval(checkLive, 1000);
+    }, 1000);
     return () => clearInterval(interval);
   }, [room.scheduled_time]);
 

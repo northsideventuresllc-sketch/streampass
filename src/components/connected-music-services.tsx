@@ -25,10 +25,14 @@ export function ConnectedMusicServices({
 
   useEffect(() => {
     const stored = localStorage.getItem(`streampass_music_platform_${userId}`);
-    if (stored && (MUSIC_STREAMING_SERVICES as readonly string[]).includes(stored)) {
-      setPreferredPlatform(stored);
+    if (
+      stored &&
+      (MUSIC_STREAMING_SERVICES as readonly string[]).includes(stored) &&
+      stored !== preferredPlatform
+    ) {
+      void Promise.resolve().then(() => setPreferredPlatform(stored));
     }
-  }, [userId]);
+  }, [userId, preferredPlatform]);
 
   const connectedPlatforms = new Set(accounts.map((a) => a.platform));
 

@@ -45,16 +45,18 @@ export function StreamingSearchBar({
   const [activeIndex, setActiveIndex] = useState(-1);
   const [error, setError] = useState<string | null>(null);
 
+  const canSuggest = debouncedQuery.trim().length >= 2;
+
   useEffect(() => {
-    if (debouncedQuery.trim().length < 2) {
-      setSuggestions([]);
-      setLoading(false);
-      return;
-    }
+    if (!canSuggest) return;
 
     let cancelled = false;
-    setLoading(true);
-    setError(null);
+
+    void Promise.resolve().then(() => {
+      if (cancelled) return;
+      setLoading(true);
+      setError(null);
+    });
 
     fetchSuggestions(debouncedQuery)
       .then((items) => {
@@ -75,7 +77,9 @@ export function StreamingSearchBar({
     return () => {
       cancelled = true;
     };
-  }, [debouncedQuery]);
+  }, [canSuggest, debouncedQuery]);
+
+  const visibleSuggestions = canSuggest ? suggestions : [];
 
   useEffect(() => {
     function handlePointerDown(event: MouseEvent) {
@@ -98,7 +102,7 @@ export function StreamingSearchBar({
     if (event.key === "ArrowDown") {
       event.preventDefault();
       setOpen(true);
-      setActiveIndex((prev) => Math.min(prev + 1, suggestions.length - 1));
+      setActiveIndex((prev) => Math.min(prev + 1, visibleSuggestions.length - 1));
       return;
     }
 
@@ -110,8 +114,8 @@ export function StreamingSearchBar({
 
     if (event.key === "Enter") {
       event.preventDefault();
-      if (activeIndex >= 0 && suggestions[activeIndex]) {
-        chooseSuggestion(suggestions[activeIndex]);
+      if (activeIndex >= 0 && visibleSuggestions[activeIndex]) {
+        chooseSuggestion(visibleSuggestions[activeIndex]);
         return;
       }
       setOpen(false);
@@ -125,7 +129,9 @@ export function StreamingSearchBar({
   }
 
   const showDropdown =
-    open && value.trim().length >= 2 && (loading || suggestions.length > 0 || error);
+    open &&
+    canSuggest &&
+    (loading || visibleSuggestions.length > 0 || error);
 
   return (
     <div ref={containerRef} className="relative z-[1]">
@@ -155,7 +161,9 @@ export function StreamingSearchBar({
           aria-controls={listboxId}
           aria-autocomplete="list"
         />
-        {loading && <Loader2 className="search-bar__spinner animate-spin" />}
+        {loading && canSuggest && (
+          <Loader2 className="search-bar__spinner animate-spin" />
+        )}
         <button type="submit" className="search-bar__submit">
           Search
         </button>
@@ -163,17 +171,17 @@ export function StreamingSearchBar({
 
       {showDropdown && (
         <ul id={listboxId} role="listbox" className="search-suggest">
-          {loading && suggestions.length === 0 && !error && (
+          {loading && visibleSuggestions.length === 0 && !error && (
             <li className="search-suggest__empty">Finding titles…</li>
           )}
           {error && <li className="search-suggest__empty">{error}</li>}
           {!loading &&
             !error &&
-            suggestions.length === 0 &&
-            debouncedQuery.trim().length >= 2 && (
+            visibleSuggestions.length === 0 &&
+            canSuggest && (
               <li className="search-suggest__empty">No matches yet — press Enter to search.</li>
             )}
-          {suggestions.map((suggestion, index) => (
+          {visibleSuggestions.map((suggestion, index) => (
             <li key={`${suggestion.mediaType}-${suggestion.externalId}`}>
               <button
                 type="button"
