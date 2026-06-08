@@ -66,7 +66,7 @@ export function JamView({
   const [messages, setMessages] = useState(initialMessages);
   const [queue, setQueue] = useState(initialQueue);
   const [jamState, setJamState] = useState(initialState);
-  const [members, setMembers] = useState(initialMembers);
+  const [members] = useState(initialMembers);
   const [newMessage, setNewMessage] = useState("");
   const [isLive, setIsLive] = useState(
     () => new Date(room.scheduled_time).getTime() <= Date.now()
