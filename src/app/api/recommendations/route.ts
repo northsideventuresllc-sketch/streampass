@@ -4,6 +4,68 @@ import { createClient } from "@/lib/supabase/server";
 import { isVideoService } from "@/lib/constants";
 import type { Recommendation } from "@/lib/types";
 
+const GEMINI_MODEL = "gemini-2.0-flash";
+
+function parseRecommendations(text: string): Recommendation[] | null {
+  const jsonMatch = text.match(/\[[\s\S]*\]/);
+  if (!jsonMatch) return null;
+  try {
+    return JSON.parse(jsonMatch[0]) as Recommendation[];
+  } catch {
+    return null;
+  }
+}
+
+async function callGeminiOnce(apiKey: string, prompt: string): Promise<string | null> {
+  const r = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`,
+    {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { maxOutputTokens: 1024, temperature: 0.4 },
+      }),
+    }
+  );
+  if (!r.ok) return null;
+  const data = await r.json();
+  const text = data.candidates?.[0]?.content?.parts
+    ?.map((p: { text?: string }) => p.text)
+    .join("")
+    ?.trim();
+  return text || null;
+}
+
+async function callGemini(prompt: string): Promise<string | null> {
+  const keys = [process.env.GEMINI_API_KEY, process.env.GEMINI_API_KEY_BACKUP].filter(
+    (k): k is string => Boolean(k)
+  );
+  for (const key of keys) {
+    try {
+      const text = await callGeminiOnce(key, prompt);
+      if (text) return text;
+    } catch {
+      // try next key
+    }
+  }
+  return null;
+}
+
+async function callAnthropic(apiKey: string, prompt: string): Promise<string> {
+  const anthropic = new Anthropic({ apiKey });
+  const message = await anthropic.messages.create({
+    model: "claude-sonnet-4-20250514",
+    max_tokens: 1024,
+    messages: [{ role: "user", content: prompt }],
+  });
+  const textBlock = message.content.find((b) => b.type === "text");
+  if (!textBlock || textBlock.type !== "text") {
+    throw new Error("No text response from Claude");
+  }
+  return textBlock.text;
+}
+
 export async function GET() {
   const supabase = await createClient();
   const {
@@ -14,10 +76,11 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) {
+  const anthropicKey = process.env.ANTHROPIC_API_KEY;
+  const hasGemini = Boolean(process.env.GEMINI_API_KEY);
+  if (!anthropicKey && !hasGemini) {
     return NextResponse.json(
-      { error: "Anthropic API key not configured" },
+      { error: "No recommendation provider configured" },
       { status: 500 }
     );
   }
@@ -56,8 +119,6 @@ export async function GET() {
     });
   }
 
-  const anthropic = new Anthropic({ apiKey });
-
   const prompt = `You are a cross-platform video streaming recommendation engine for Stream Pass.
 
 User's subscribed video services: ${subscribedVideoServices}
@@ -75,23 +136,19 @@ Respond with ONLY valid JSON array, no markdown:
 ]`;
 
   try {
-    const message = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 1024,
-      messages: [{ role: "user", content: prompt }],
-    });
-
-    const textBlock = message.content.find((b) => b.type === "text");
-    if (!textBlock || textBlock.type !== "text") {
-      throw new Error("No text response from Claude");
+    // Free-tier Gemini first; paid Anthropic only if Gemini is unavailable/fails.
+    let text: string | null = hasGemini ? await callGemini(prompt) : null;
+    if (!text && anthropicKey) {
+      text = await callAnthropic(anthropicKey, prompt);
+    }
+    if (!text) {
+      throw new Error("No recommendation provider produced a response");
     }
 
-    const jsonMatch = textBlock.text.match(/\[[\s\S]*\]/);
-    if (!jsonMatch) {
+    const recommendations = parseRecommendations(text);
+    if (!recommendations) {
       throw new Error("Could not parse recommendations");
     }
-
-    const recommendations = JSON.parse(jsonMatch[0]) as Recommendation[];
 
     return NextResponse.json({ recommendations: recommendations.slice(0, 5) });
   } catch (err) {
