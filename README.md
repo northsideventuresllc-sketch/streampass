@@ -51,7 +51,9 @@ cp .env.local.example .env.local
 | `NEXT_PUBLIC_SUPABASE_URL` | Yes | Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes | Supabase anon/publishable key |
 | `SUPABASE_SERVICE_ROLE_KEY` | Yes | Service role key (username login + admin API) |
-| `ANTHROPIC_API_KEY` | Yes | Anthropic API key for AI recommendations |
+| `ANTHROPIC_API_KEY` | Yes | Anthropic API key for AI recommendations (fallback, used only if Gemini fails) |
+| `GEMINI_API_KEY` | No | Free-tier Gemini key, tried before Anthropic for AI recommendations |
+| `GEMINI_API_KEY_BACKUP` | No | Second Gemini key (e.g. separate Google account), tried if the primary key fails |
 | `TMDB_API_KEY` | Yes | TMDB API key for search/discover |
 | `STREAMPASS_ADMIN_KEY` | Yes | Admin key for passport updates |
 | `SPOTIFY_CLIENT_ID` | No | Spotify OAuth (music connect + search) |
