@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { isVideoService } from "@/lib/constants";
 import type { Recommendation } from "@/lib/types";
+import { callAxonLocal } from "@/lib/axon-local-relay";
 
 const GEMINI_MODEL = "gemini-2.0-flash";
 
@@ -136,8 +137,17 @@ Respond with ONLY valid JSON array, no markdown:
 ]`;
 
   try {
-    // Free-tier Gemini first; paid Anthropic only if Gemini is unavailable/fails.
-    let text: string | null = hasGemini ? await callGemini(prompt) : null;
+    // AXON-EVERYWHERE-PROJECT (2026-08-05): AXON-local (Mac mini) -> Gemini main ->
+    // Gemini backup -> Anthropic (paid, last resort). Decision #598 item 11 / #619.
+    // AXON-local returns null (and this app falls through unchanged) until
+    // NI_BRAIN_SUPABASE_URL / NI_BRAIN_SUPABASE_SERVICE_ROLE_KEY are set in this app's env.
+    let text: string | null = await callAxonLocal(
+      "You are a cross-platform video streaming recommendation engine for Stream Pass. Respond with ONLY valid JSON, no markdown.",
+      prompt,
+    ).catch(() => null);
+    if (!text && hasGemini) {
+      text = await callGemini(prompt);
+    }
     if (!text && anthropicKey) {
       text = await callAnthropic(anthropicKey, prompt);
     }
