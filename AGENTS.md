@@ -6,7 +6,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 ## Cursor Cloud specific instructions
 
-Stream Pass is a Next.js 16 app. Cloud agents should use the repo-level environment in `.cursor/environment.json` (`npm install` on boot, `npm run dev` to start the dev server).
+Stream Pass is a Next.js 16 app. Cursor is retired (Decision #238); its `.cursor/` config is archived. Cloud agents should run `npm install` on boot, `npm run dev` to start the dev server.
 
 ### Environment variables
 
