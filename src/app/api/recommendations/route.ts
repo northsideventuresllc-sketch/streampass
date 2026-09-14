@@ -6,6 +6,7 @@ import type { Recommendation } from "@/lib/types";
 import { callAxonLocal } from "@/lib/axon-local-relay";
 
 const GEMINI_MODEL = "gemini-2.0-flash";
+const PROVIDER_FETCH_TIMEOUT_MS = 15_000;
 
 function parseRecommendations(text: string): Recommendation[] | null {
   const jsonMatch = text.match(/\[[\s\S]*\]/);
@@ -27,6 +28,7 @@ async function callGeminiOnce(apiKey: string, prompt: string): Promise<string | 
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: { maxOutputTokens: 1024, temperature: 0.4 },
       }),
+      signal: AbortSignal.timeout(PROVIDER_FETCH_TIMEOUT_MS),
     }
   );
   if (!r.ok) return null;
@@ -55,11 +57,14 @@ async function callGemini(prompt: string): Promise<string | null> {
 
 async function callAnthropic(apiKey: string, prompt: string): Promise<string> {
   const anthropic = new Anthropic({ apiKey });
-  const message = await anthropic.messages.create({
-    model: "claude-sonnet-4-20250514",
-    max_tokens: 1024,
-    messages: [{ role: "user", content: prompt }],
-  });
+  const message = await anthropic.messages.create(
+    {
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: prompt }],
+    },
+    { timeout: PROVIDER_FETCH_TIMEOUT_MS }
+  );
   const textBlock = message.content.find((b) => b.type === "text");
   if (!textBlock || textBlock.type !== "text") {
     throw new Error("No text response from Claude");

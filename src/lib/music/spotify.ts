@@ -3,6 +3,7 @@ import { enrichTrackWithPlatformLinks } from "./cross-platform";
 
 const SPOTIFY_TOKEN_URL = "https://accounts.spotify.com/api/token";
 const SPOTIFY_API_BASE = "https://api.spotify.com/v1";
+const SPOTIFY_FETCH_TIMEOUT_MS = 10_000;
 
 export function isSpotifyConfigured(): boolean {
   return Boolean(
@@ -57,6 +58,7 @@ export async function exchangeSpotifyCode(
       code,
       redirect_uri: redirectUri,
     }),
+    signal: AbortSignal.timeout(SPOTIFY_FETCH_TIMEOUT_MS),
   });
 
   if (!res.ok) {
@@ -87,6 +89,7 @@ export async function refreshSpotifyToken(refreshToken: string): Promise<{
       grant_type: "refresh_token",
       refresh_token: refreshToken,
     }),
+    signal: AbortSignal.timeout(SPOTIFY_FETCH_TIMEOUT_MS),
   });
 
   if (!res.ok) {
@@ -112,6 +115,7 @@ async function getClientCredentialsToken(): Promise<string | null> {
       "Content-Type": "application/x-www-form-urlencoded",
     },
     body: new URLSearchParams({ grant_type: "client_credentials" }),
+    signal: AbortSignal.timeout(SPOTIFY_FETCH_TIMEOUT_MS),
   });
 
   if (!res.ok) return null;
@@ -147,6 +151,7 @@ export async function searchSpotifyTracks(
 
   const res = await fetch(`${SPOTIFY_API_BASE}/search?${params}`, {
     headers: { Authorization: `Bearer ${token}` },
+    signal: AbortSignal.timeout(SPOTIFY_FETCH_TIMEOUT_MS),
   });
 
   if (!res.ok) return [];
@@ -165,6 +170,7 @@ export async function getSpotifyProfile(accessToken: string): Promise<{
 }> {
   const res = await fetch(`${SPOTIFY_API_BASE}/me`, {
     headers: { Authorization: `Bearer ${accessToken}` },
+    signal: AbortSignal.timeout(SPOTIFY_FETCH_TIMEOUT_MS),
   });
 
   if (!res.ok) throw new Error("Failed to fetch Spotify profile");
