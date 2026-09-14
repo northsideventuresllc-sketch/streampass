@@ -1,5 +1,19 @@
+import { timingSafeEqual } from "crypto";
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+
+// SECURITY (2026-09-14 audit): a plain `!==` string compare on a secret is
+// timing-unsafe — it can leak how many leading bytes matched via response
+// timing. Compare fixed-length buffers with crypto.timingSafeEqual instead,
+// failing closed (not throwing) on a length mismatch rather than comparing
+// mismatched-length buffers.
+function isAuthorizedAdminRequest(authHeader: string | null, adminKey: string): boolean {
+  if (!authHeader) return false;
+  const provided = Buffer.from(authHeader);
+  const expected = Buffer.from(`Bearer ${adminKey}`);
+  if (provided.length !== expected.length) return false;
+  return timingSafeEqual(provided, expected);
+}
 
 export async function PATCH(request: Request) {
   const adminKey = process.env.STREAMPASS_ADMIN_KEY;
@@ -11,7 +25,7 @@ export async function PATCH(request: Request) {
   }
 
   const authHeader = request.headers.get("authorization");
-  if (authHeader !== `Bearer ${adminKey}`) {
+  if (!isAuthorizedAdminRequest(authHeader, adminKey)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
