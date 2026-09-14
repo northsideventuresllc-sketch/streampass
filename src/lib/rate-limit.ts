@@ -47,12 +47,22 @@ export function checkRateLimit(key: string, limit: number, windowMs: number): Ra
   return { allowed: true, remaining: limit - existing.count, retryAfterMs: 0 };
 }
 
-/** Best-effort client IP extraction for rate-limit keying (not for auth decisions). */
+/**
+ * Best-effort client IP extraction for rate-limit keying (not for auth decisions).
+ *
+ * `x-forwarded-for` is a hop-by-hop chain: a caller can set their own value on
+ * the request they send us, which lands at the FRONT of the chain. The entry
+ * we can actually trust is the one appended by the last hop before us (this
+ * app's own host platform), which is the END of the chain — so this reads the
+ * last entry, never the first, to avoid a caller trivially rotating a fake
+ * value to dodge the limiter.
+ */
 export function getClientIp(request: Request): string {
   const forwardedFor = request.headers.get("x-forwarded-for");
   if (forwardedFor) {
-    const first = forwardedFor.split(",")[0]?.trim();
-    if (first) return first;
+    const parts = forwardedFor.split(",").map((p) => p.trim()).filter(Boolean);
+    const last = parts[parts.length - 1];
+    if (last) return last;
   }
   return request.headers.get("x-real-ip")?.trim() || "unknown";
 }
