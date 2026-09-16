@@ -1,4 +1,5 @@
 const TMDB_BASE = "https://api.themoviedb.org/3";
+const TMDB_FETCH_TIMEOUT_MS = 15_000;
 
 export function getTmdbApiKey(): string | null {
   return process.env.TMDB_API_KEY ?? null;
@@ -26,6 +27,7 @@ export async function tmdbFetch<T>(
 
   const res = await fetch(url.toString(), {
     next: { revalidate: 3600 },
+    signal: AbortSignal.timeout(TMDB_FETCH_TIMEOUT_MS),
   });
 
   if (!res.ok) {

@@ -11,10 +11,13 @@
  * the next tier (Gemini main -> Gemini backup -> Anthropic last) without throwing.
  */
 
+import { quoteShellArg } from "./shell-quote";
+
 const MINI_RELAY_MODEL = "axon-ornith:latest";
 const MINI_RELAY_MAX_WAIT_MS = 45_000;
 const MINI_RELAY_POLL_MS = 2_500;
 const MINI_RELAY_CMD_TIMEOUT_S = 40;
+const OLLAMA_GENERATE_URL = "http://localhost:11434/api/generate";
 
 function sbHeaders(supabaseKey: string) {
   return {
@@ -35,7 +38,24 @@ export async function callAxonLocal(system: string, prompt: string): Promise<str
   // which silently looked like "AXON unreachable" and fell through to Gemini every time.
   // Found + fixed 2026-08-05 during the first live proof run (Learning #3625).
   const ollamaBody = JSON.stringify({ model: MINI_RELAY_MODEL, prompt: fullPrompt, stream: false, think: false });
-  const cmd = `curl -s -m ${MINI_RELAY_CMD_TIMEOUT_S} http://localhost:11434/api/generate -d ${JSON.stringify(
+
+  // SECURITY (2026-09-14 audit): `ollamaBody` embeds caller-supplied `system`/`prompt`
+  // text (ultimately watchlist/show titles from users) with no shell-escaping. This `cmd`
+  // is run on the Mac mini by nvg-mini-runner.py via a shell (this is a `kind: "shell"`
+  // job) — previously it was interpolated with plain `JSON.stringify()` (which only does
+  // JSON string-escaping, not shell-escaping), so a title containing shell metacharacters
+  // (backticks, `$(...)`, `;`, `|`, `&`) could break out of the intended curl invocation
+  // and run arbitrary commands on the mini. Every interpolated value below MUST go through
+  // `quoteShellArg()` (POSIX single-quote escaping) — never reintroduce a raw template
+  // interpolation of untrusted content here.
+  //
+  // `ollamaUrl`/`ollamaBody` are also sent as separate, non-shell payload fields so the
+  // runner can be migrated to issue this HTTP request directly (no shell involved at all)
+  // instead of parsing `cmd`. Escaping `cmd` closes the injection reachable from this app
+  // today; it does not remove the underlying risk pattern of the runner using
+  // `subprocess.run(cmd, shell=True)` in general — that only goes away once
+  // nvg-mini-runner.py (separate nv-vault repo, not in scope here) stops shelling out.
+  const cmd = `curl -s -m ${MINI_RELAY_CMD_TIMEOUT_S} ${quoteShellArg(OLLAMA_GENERATE_URL)} -d ${quoteShellArg(
     ollamaBody,
   )}`;
 
@@ -47,7 +67,12 @@ export async function callAxonLocal(system: string, prompt: string): Promise<str
       body: JSON.stringify({
         kind: "shell",
         title: "streampass-axon-local-relay",
-        payload: { cmd, timeout: MINI_RELAY_CMD_TIMEOUT_S + 5 },
+        payload: {
+          cmd,
+          timeout: MINI_RELAY_CMD_TIMEOUT_S + 5,
+          ollamaUrl: OLLAMA_GENERATE_URL,
+          ollamaBody,
+        },
         status: "queued",
       }),
     });
