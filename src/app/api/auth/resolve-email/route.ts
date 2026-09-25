@@ -1,7 +1,29 @@
 import { NextResponse } from "next/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+
+// SECURITY (2026-09-14 audit): this endpoint returns the real account email
+// for any submitted identifier and is unauthenticated by necessity (it runs
+// before login) — that makes it a username -> email enumeration oracle with
+// no limit in front of it. Rate-limit by IP to slow mass enumeration; this is
+// deliberately generous since it also gates real login attempts.
+const RESOLVE_EMAIL_RATE_LIMIT = 10;
+const RESOLVE_EMAIL_RATE_WINDOW_MS = 5 * 60 * 1000;
 
 export async function POST(request: Request) {
+  const ip = getClientIp(request);
+  const { allowed, retryAfterMs } = checkRateLimit(
+    `resolve-email:${ip}`,
+    RESOLVE_EMAIL_RATE_LIMIT,
+    RESOLVE_EMAIL_RATE_WINDOW_MS
+  );
+  if (!allowed) {
+    return NextResponse.json(
+      { error: "Too many attempts. Try again shortly." },
+      { status: 429, headers: { "Retry-After": String(Math.ceil(retryAfterMs / 1000)) } }
+    );
+  }
+
   let body: { identifier?: string };
   try {
     body = await request.json();

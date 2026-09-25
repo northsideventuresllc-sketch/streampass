@@ -9,7 +9,6 @@ import {
 import {
   motion,
   useMotionTemplate,
-  useMotionValue,
   useSpring,
   useReducedMotion,
 } from "motion/react";

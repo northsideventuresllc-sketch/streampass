@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
 import { Music2, Check, Unplug, ExternalLink } from "lucide-react";
 import { MUSIC_STREAMING_SERVICES } from "@/lib/constants";
 import type { ConnectedAccount } from "@/lib/types";
